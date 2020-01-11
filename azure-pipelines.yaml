@@ -41,7 +41,6 @@ stages:
               command: 'package'
               chartPath: 'helm/azure-pipelines-agent'
               chartVersion: '$(Build.BuildNumber)'
-              updateDependency: true
               arguments: '--app-version $(Build.BuildNumber)'
               destination: '$(Build.ArtifactStagingDirectory)/artifacts/helm'
 
