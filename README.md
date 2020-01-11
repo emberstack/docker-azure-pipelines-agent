@@ -1,2 +1,1 @@
-# docker-azure-pipelines-agent
-Docker based agent for Azure Pipelines
+## Images used to deploy Azure Pipelines Agent.
