@@ -16,8 +16,8 @@ stages:
   - stage: build
     displayName: "Build"
     jobs:
-      - job: build
-        displayName: "Build Job"
+      - job: build_helm
+        displayName: "Helm"
         pool:
           vmImage: "Ubuntu-16.04"
         steps:
@@ -35,45 +35,73 @@ stages:
           #   workingDirectory: helm/azure-pipelines-agent
           #   displayName: 'helm lint'
 
-
           - script: |
              helm package --destination $(Build.ArtifactStagingDirectory)/artifacts/helm --version $(Build.BuildNumber) --app-version 1.0.3 helm/azure-pipelines-agent
              mkdir -p artifacts/kubectl
             displayName: 'Create Artifacts directories'
 
-
-          # - task: HelmDeploy@0
-          #   inputs:
-          #     command: 'package'
-          #     chartPath: 'helm/azure-pipelines-agent'
-          #     chartVersion: '$(Build.BuildNumber)'
-          #     arguments: '--app-version $(Build.BuildNumber)'
-          #     destination: '$(Build.ArtifactStagingDirectory)/artifacts/helm'
-
           - publish: '$(Build.ArtifactStagingDirectory)/artifacts/helm'
             artifact: 'helm'
 
-  #         - task: Docker@2
-  #           displayName: 'Build amd64 image'
-  #           inputs:
-  #             containerRegistry: 'Emberstack Docker Hub'
-  #             repository: $(imageRepository)
-  #             Dockerfile: ES.Kubernetes.Reflector/Dockerfile
-  #             command: build
-  #             buildContext: .
-  #             tags: 'build-$(Build.BuildNumber)-amd64'
-            
-  #         - task: Docker@2
-  #           displayName: 'Build arm32 image'
-  #           inputs:
-  #             containerRegistry: 'Emberstack Docker Hub'
-  #             repository: $(imageRepository)
-  #             Dockerfile: ES.Kubernetes.Reflector/Dockerfile_arch
-  #             buildContext: .
-  #             command: build
-  #             arguments: '--build-arg BASE_IMAGE=$(imageRepository):build-$(Build.BuildNumber)-amd64 --build-arg FINAL_IMAGE=mcr.microsoft.com/dotnet/core/aspnet:2.2-stretch-slim-arm32v7'
-  #             tags: 'build-$(Build.BuildNumber)-arm32'
-            
+          - task: Docker@2
+            displayName: 'Build amd64 image'
+            inputs:
+              containerRegistry: 'Emberstack Docker Hub'
+              repository: $(imageRepository)
+              Dockerfile: docker/Dockerfile
+              command: build
+              buildContext: .
+              tags: 'build-$(Build.BuildNumber)-amd64'
+
+
+      - job: build_docker_amd64
+        displayName: "Docker amd64"
+        pool:
+          vmImage: "Ubuntu-16.04"
+        steps:
+          - task: Docker@2
+            displayName: 'Build amd64 image'
+            inputs:
+              containerRegistry: 'Emberstack Docker Hub'
+              repository: $(imageRepository)
+              Dockerfile: docker/Dockerfile
+              command: build
+              buildContext: .
+              tags: 'build-$(Build.BuildNumber)-amd64'
+          - task: Docker@2
+            displayName: "Push images"
+            inputs:
+              containerRegistry: "Emberstack Docker Hub"
+              repository: $(imageRepository)
+              command: push
+              tags: |
+                build-$(Build.BuildNumber)-amd64
+              
+      - job: build_docker_arm32
+        displayName: "Docker arm32"
+        pool:
+          name: winromulus
+          demands:
+          - Agent.OSArchitecture -equals ARM
+        steps:
+          - task: Docker@2
+            displayName: 'Build arm32 image'
+            inputs:
+              containerRegistry: 'Emberstack Docker Hub'
+              repository: $(imageRepository)
+              Dockerfile: docker/Dockerfile
+              command: build
+              buildContext: .
+              tags: 'build-$(Build.BuildNumber)-arm32'
+          - task: Docker@2
+            displayName: "Push images"
+            inputs:
+              containerRegistry: "Emberstack Docker Hub"
+              repository: $(imageRepository)
+              command: push
+              tags: |
+                build-$(Build.BuildNumber)-arm32
+
   #         - task: Docker@2
   #           displayName: 'Build arm64 image'
   #           inputs:
