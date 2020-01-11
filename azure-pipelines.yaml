@@ -36,13 +36,19 @@ stages:
           #   displayName: 'helm lint'
 
 
-          - task: HelmDeploy@0
-            inputs:
-              command: 'package'
-              chartPath: 'helm/azure-pipelines-agent'
-              chartVersion: '$(Build.BuildNumber)'
-              arguments: '--app-version $(Build.BuildNumber)'
-              destination: '$(Build.ArtifactStagingDirectory)/artifacts/helm'
+          - script: |
+             helm package --destination $(Build.ArtifactStagingDirectory)/artifacts/helm --version $(Build.BuildNumber) --app-version 1.0.3 helm/azure-pipelines-agent
+             mkdir -p artifacts/kubectl
+            displayName: 'Create Artifacts directories'
+
+
+          # - task: HelmDeploy@0
+          #   inputs:
+          #     command: 'package'
+          #     chartPath: 'helm/azure-pipelines-agent'
+          #     chartVersion: '$(Build.BuildNumber)'
+          #     arguments: '--app-version $(Build.BuildNumber)'
+          #     destination: '$(Build.ArtifactStagingDirectory)/artifacts/helm'
 
           - publish: '$(Build.ArtifactStagingDirectory)/artifacts/helm'
             artifact: 'helm'
