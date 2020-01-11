@@ -84,6 +84,9 @@ stages:
           demands:
           - Agent.OSArchitecture -equals ARM
         steps:
+          - task: DockerInstaller@0
+            inputs:
+              dockerVersion: '*'
           - task: Docker@2
             displayName: 'Build arm32 image'
             inputs:
