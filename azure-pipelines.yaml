@@ -172,7 +172,7 @@ stages:
         variables:
           - group: "OpenSource.GitHub"
         steps:
-          
+
           - checkout: none
 
           - download: current
@@ -213,4 +213,15 @@ stages:
               git commit -m "Added azure-pipelines-agent-$(Build.BuildNumber).tgz"
               git push
             displayName: 'Add chart to GitHub repository'
+
+          - task: GitHubRelease@1
+            displayName: 'GitHub release (create)'
+            inputs:
+              gitHubConnection: GitHub
+              repositoryName: 'EmberStack/docker-azure-pipelines-agent'
+              tagSource: userSpecifiedTag
+              tag: 'v$(Build.BuildNumber)'
+              title: 'Release v$(Build.BuildNumber)'
+              releaseNotesSource: inline
+              releaseNotes: 'The release process is automated.'
     
