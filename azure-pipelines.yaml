@@ -38,7 +38,7 @@ stages:
           #   displayName: 'helm lint'
 
           - script: |
-             helm package --destination $(Build.ArtifactStagingDirectory)/artifacts/helm --version $(Build.BuildNumber) --app-version 1.0.3 helm/azure-pipelines-agent
+             helm package --destination $(Build.ArtifactStagingDirectory)/artifacts/helm --version $(Build.BuildNumber) --app-version $(Build.BuildNumber) helm/azure-pipelines-agent
              mkdir -p artifacts/kubectl
             displayName: 'Create Artifacts directories'
 
