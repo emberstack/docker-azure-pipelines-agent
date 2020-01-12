@@ -78,8 +78,8 @@ stages:
           - Agent.OSArchitecture -equals ARM
         steps:
           - script: |
-             curl -fsSL https://get.docker.com -o get-docker.sh
-             sh get-docker.sh
+             curl -sSL https://get.docker.com | sh
+             sudo usermod -aG docker pi
             displayName: 'Install docker'
           - task: DockerInstaller@0
             inputs:
