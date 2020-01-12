@@ -59,7 +59,7 @@ stages:
               repository: $(imageRepository)
               Dockerfile: docker/Dockerfile
               command: build
-              buildContext: .
+              buildContext: docker
               tags: 'build-$(Build.BuildNumber)-amd64'
           - task: Docker@2
             displayName: "Push images"
@@ -91,7 +91,7 @@ stages:
               repository: $(imageRepository)
               Dockerfile: docker/Dockerfile
               command: build
-              buildContext: .
+              buildContext: docker
               tags: 'build-$(Build.BuildNumber)-arm32'
           - task: Docker@2
             displayName: "Push images"
