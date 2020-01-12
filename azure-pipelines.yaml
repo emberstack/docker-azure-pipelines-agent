@@ -160,79 +160,57 @@ stages:
 
 
 
-  # - stage: release
-  #   displayName: "Release"
-  #   dependsOn: 'build'
-  #   condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'Manual'), in(variables['Build.SourceBranchName'], 'master'))
-  #   jobs:
-  #     - job: release
-  #       displayName: "Release Job"
-  #       pool:
-  #         vmImage: "Ubuntu-16.04"
-  #       variables:
-  #         - group: "OpenSource.GitHub"
-  #       steps:
-  #         - checkout: none
+  - stage: release
+    displayName: "Release"
+    dependsOn: 'build'
+    condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'Manual'), in(variables['Build.SourceBranchName'], 'master'))
+    jobs:
+      - job: release
+        displayName: "Release Job"
+        pool:
+          vmImage: "Ubuntu-16.04"
+        variables:
+          - group: "OpenSource.GitHub"
+        steps:
+          
+          - checkout: none
 
-  #         - download: current
-  #           artifact: 'helm'
+          - download: current
+            artifact: 'helm'    
 
-  #         - download: current
-  #           artifact: 'kubectl'            
+          - task: Docker@2
+            displayName: "Docker Login"
+            inputs:
+              containerRegistry: "Emberstack Docker Hub"
+              command: login
 
-  #         - task: Docker@2
-  #           displayName: "Docker Login"
-  #           inputs:
-  #             containerRegistry: "Emberstack Docker Hub"
-  #             command: login
+          - task: HelmInstaller@1
+            inputs:
+              helmVersionToInstall: 'latest'
 
-  #         - task: HelmInstaller@0
-  #           displayName: 'Install Helm'
-  #           inputs:
-  #             helmVersion: 2.13.1
-  #             kubectlVersion: 1.10.11    
+          - script: |
+              docker pull $(imageRepository):build-$(Build.BuildNumber)-amd64
+              docker pull $(imageRepository):build-$(Build.BuildNumber)-arm32
+              docker manifest create $(imageRepository):release-$(Build.BuildNumber) $(imageRepository):build-$(Build.BuildNumber)-amd64 $(imageRepository):build-$(Build.BuildNumber)-arm32
+              docker manifest create $(imageRepository):latest                       $(imageRepository):build-$(Build.BuildNumber)-amd64 $(imageRepository):build-$(Build.BuildNumber)-arm32
+              docker manifest push $(imageRepository):release-$(Build.BuildNumber)
+              docker manifest push $(imageRepository):latest
+            displayName: 'docker pull, tag and push'
 
-  #         - script: |
-  #             docker pull $(imageRepository):build-$(Build.BuildNumber)-amd64
-  #             docker pull $(imageRepository):build-$(Build.BuildNumber)-arm32
-  #             docker pull $(imageRepository):build-$(Build.BuildNumber)-arm64
-  #             docker manifest create $(imageRepository):release-$(Build.BuildNumber) $(imageRepository):build-$(Build.BuildNumber)-amd64 $(imageRepository):build-$(Build.BuildNumber)-arm32 $(imageRepository):build-$(Build.BuildNumber)-arm64
-  #             docker manifest create $(imageRepository):latest                       $(imageRepository):build-$(Build.BuildNumber)-amd64 $(imageRepository):build-$(Build.BuildNumber)-arm32 $(imageRepository):build-$(Build.BuildNumber)-arm64
-  #             docker manifest push $(imageRepository):release-$(Build.BuildNumber)
-  #             docker manifest push $(imageRepository):latest
-  #           displayName: 'docker pull, tag and push'
-
-  #         - script: |
-  #             git config --global user.email "$(emberstack-agent-email)"
-  #             git config --global user.name "$(emberstack-agent-name)"
-  #             git clone https://$(emberstack-agent-username):$(emberstack-agent-pat)@github.com/EmberStack/helm-charts.git
+          - script: |
+              git config --global user.email "$(emberstack-agent-email)"
+              git config --global user.name "$(emberstack-agent-name)"
+              git clone https://$(emberstack-agent-username):$(emberstack-agent-pat)@github.com/EmberStack/helm-charts.git
               
-  #             mkdir -p helm-charts/charts
-  #             cp $(Pipeline.Workspace)/helm/reflector-$(Build.BuildNumber).tgz  helm-charts/charts
+              mkdir -p helm-charts/charts
+              cp $(Pipeline.Workspace)/helm/azure-pipelines-agent-$(Build.BuildNumber).tgz  helm-charts/charts
               
-  #             cd helm-charts
-  #             rm index.yaml
-  #             helm repo index ./
-  #             git add .
-  #             git status
-  #             git commit -m "Added reflector-$(Build.BuildNumber).tgz"
-  #             git push
-  #           displayName: 'Add chart to GitHub repository'            
-
-  #         - script: |
-  #             mkdir -p github
-  #             cp $(Pipeline.Workspace)/kubectl/reflector-$(Build.BuildNumber).yaml  github/reflector.yaml
-  #           displayName: 'Prepare GitHub Artifacts'
-
-  #         - task: GitHubRelease@1
-  #           displayName: 'GitHub release (create)'
-  #           inputs:
-  #             gitHubConnection: GitHub
-  #             repositoryName: 'EmberStack/kubernetes-reflector'
-  #             tagSource: userSpecifiedTag
-  #             tag: 'v$(Build.BuildNumber)'
-  #             title: 'Release v$(Build.BuildNumber)'
-  #             releaseNotesSource: inline
-  #             releaseNotes: 'The release process is automated.'
-  #             assets: '$(System.DefaultWorkingDirectory)/github/*.*'
+              cd helm-charts
+              rm index.yaml
+              helm repo index ./
+              git add .
+              git status
+              git commit -m "Added azure-pipelines-agent-$(Build.BuildNumber).tgz"
+              git push
+            displayName: 'Add chart to GitHub repository'
     
