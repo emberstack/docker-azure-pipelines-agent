@@ -27,6 +27,9 @@ jobs:
       - name: artifacts - prepare directories
         run: mkdir -p .artifacts/helm
 
+      - name: checkout
+        uses: actions/checkout@v1
+
       - name: helm - import README
         run: cp README.md src/helm/azure-pipelines-agent/README.md
 
