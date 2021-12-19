@@ -14,10 +14,27 @@ jobs:
       imageRepository: "emberstack/azure-pipelines-agent"
       DOCKER_CLI_EXPERIMENTAL: "enabled"
     steps:
+
       - name: tools - helm - install
         uses: azure/setup-helm@v1
       # - run:  echo "Hello ${{ env.version}}"
+
       - name: tools - docker - install
         uses: actions-hub/docker/cli@master
         env:
           SKIP_LOGIN: true
+
+      - name: artifacts - prepare directories
+        run: mkdir -p .artifacts/helm
+
+      - name: helm - import README
+        run: cp README.md src/helm/azure-pipelines-agent/README.md
+
+      - name: helm - template chart
+        run: helm package --destination .artifacts/helm --version ${{env.version}} --app-version ${{env.version}} src/helm/azure-pipelines-agent
+
+      - name: "artifacts - publish - helm chart"
+        uses: actions/upload-artifact@master
+        with:
+          name: helm
+          path: .artifacts/helm
