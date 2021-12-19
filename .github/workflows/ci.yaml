@@ -1,13 +1,16 @@
 name: Continuous Integration
 
-on: [push]
-
+on:
+  push:
+    paths:
+      - "src/*"
+      - ".github/workflows/*"
 jobs:
   ci:
     runs-on: ubuntu-latest
     env:
       version: 2.1.${{github.run_number}}
     steps:
-      - name: Install Helm
+      - name: tools - helm - install
         uses: azure/setup-helm@v1
       - run:  echo "Hello ${{ env.version}}"
