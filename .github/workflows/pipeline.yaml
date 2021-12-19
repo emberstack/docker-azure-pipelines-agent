@@ -5,6 +5,10 @@ on:
     paths:
       - "src/*"
       - ".github/workflows/*"
+  pull_request:
+    paths:
+      - "src/*"
+      - ".github/workflows/*"
 
 env:
   version: 2.2.${{github.run_number}}
@@ -64,7 +68,7 @@ jobs:
   cd:
     name: CD
     needs: ci
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: tools - helm - install
