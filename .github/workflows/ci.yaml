@@ -19,10 +19,10 @@ jobs:
         uses: azure/setup-helm@v1
       # - run:  echo "Hello ${{ env.version}}"
 
-      - name: tools - docker - install
-        uses: actions-hub/docker/cli@master
-        env:
-          SKIP_LOGIN: true
+      # - name: tools - docker - install
+      #   uses: actions-hub/docker/cli@master
+      #   env:
+      #     SKIP_LOGIN: true
 
       - name: tools - docker - login
         uses: actions-hub/docker/login@master
