@@ -86,6 +86,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: emberstack/helm-charts
+          path: helm-charts
 
 
       - name: Update changes in GitHub repository
