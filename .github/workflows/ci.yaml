@@ -24,11 +24,22 @@ jobs:
       #   env:
       #     SKIP_LOGIN: true
 
+      # - name: tools - docker - login
+      #   uses: actions-hub/docker/login@master
+      #   env:
+      #     DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+
       - name: tools - docker - login
-        uses: actions-hub/docker/login@master
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+
+      - name: artifacts - prepare directories
+        run: docker login --
+
 
       - name: artifacts - prepare directories
         run: mkdir -p .artifacts/helm
@@ -55,11 +66,11 @@ jobs:
           docker buildx create --name builder --driver docker-container --use
           docker buildx inspect --bootstrap
           docker buildx build --push --platform linux/amd64 -t ${{env.imageRepository}}:build-${{env.version}}-amd64   -f src/docker/Dockerfile src/docker 
-          docker buildx build --push --platform linux/arm   -t ${{env.imageRepository}}:build-${{env.version}}-arm32v7 -f src/docker/Dockerfile src/docker
-          docker buildx build --push --platform linux/arm64 -t ${{env.imageRepository}}:build-${{env.version}}-arm64v8 -f src/docker/Dockerfile src/docker
-          docker pull ${{env.imageRepository}}:build-${{env.version}}-amd64
-          docker pull ${{env.imageRepository}}:build-${{env.version}}-arm32v7
-          docker pull ${{env.imageRepository}}:build-${{env.version}}-arm64v8
-          docker manifest create  ${{env.imageRepository}}:build-${{env.version}} ${{env.imageRepository}}:build-${{env.version}}-amd64  ${{env.imageRepository}}:build-${{env.version}}-arm32v7  ${{env.imageRepository}}:build-${{env.version}}-arm64v8
-          docker manifest inspect ${{env.imageRepository}}:build-${{env.version}}
-          docker manifest push    ${{env.imageRepository}}:build-${{env.version}}
+          # docker buildx build --push --platform linux/arm   -t ${{env.imageRepository}}:build-${{env.version}}-arm32v7 -f src/docker/Dockerfile src/docker
+          # docker buildx build --push --platform linux/arm64 -t ${{env.imageRepository}}:build-${{env.version}}-arm64v8 -f src/docker/Dockerfile src/docker
+          # docker pull ${{env.imageRepository}}:build-${{env.version}}-amd64
+          # docker pull ${{env.imageRepository}}:build-${{env.version}}-arm32v7
+          # docker pull ${{env.imageRepository}}:build-${{env.version}}-arm64v8
+          # docker manifest create  ${{env.imageRepository}}:build-${{env.version}} ${{env.imageRepository}}:build-${{env.version}}-amd64  ${{env.imageRepository}}:build-${{env.version}}-arm32v7  ${{env.imageRepository}}:build-${{env.version}}-arm64v8
+          # docker manifest inspect ${{env.imageRepository}}:build-${{env.version}}
+          # docker manifest push    ${{env.imageRepository}}:build-${{env.version}}
