@@ -6,11 +6,18 @@ on:
       - "src/*"
       - ".github/workflows/*"
 jobs:
-  ci:
+  build:
+    name: Build
     runs-on: ubuntu-latest
     env:
       version: 2.1.${{github.run_number}}
+      imageRepository: "emberstack/azure-pipelines-agent"
+      DOCKER_CLI_EXPERIMENTAL: "enabled"
     steps:
       - name: tools - helm - install
         uses: azure/setup-helm@v1
-      - run:  echo "Hello ${{ env.version}}"
+      # - run:  echo "Hello ${{ env.version}}"
+      - name: tools - docker - install
+        uses: actions-hub/docker/cli@master
+        env:
+          SKIP_LOGIN: true
