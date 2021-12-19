@@ -95,7 +95,7 @@ jobs:
           cp .artifacts/helm/azure-pipelines-agent-${{env.version}}.tgz  helm-charts/charts
 
           cd helm-charts
-          rm index.yaml
+          # rm index.yaml -f
           helm repo index ./
 
           git config user.name "Romeo Dumitrescu"
