@@ -10,3 +10,4 @@ jobs:
     steps:
       - name: Install Helm
         uses: azure/setup-helm@v1
+      - run:  echo "Hello $version"
