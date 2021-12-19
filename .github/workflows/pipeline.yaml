@@ -5,14 +5,17 @@ on:
     paths:
       - "src/*"
       - ".github/workflows/*"
+
+env:
+  version: 2.2.${{github.run_number}}
+  imageRepository: "emberstack/azure-pipelines-agent"
+  DOCKER_CLI_EXPERIMENTAL: "enabled"
+
+
 jobs:
   ci:
     name: CI
     runs-on: ubuntu-latest
-    env:
-      version: 2.2.${{github.run_number}}
-      imageRepository: "emberstack/azure-pipelines-agent"
-      DOCKER_CLI_EXPERIMENTAL: "enabled"
     steps:
 
       - name: tools - helm - install
@@ -21,8 +24,8 @@ jobs:
       - name: tools - docker - login
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PAT }}
+          username: ${{ secrets.ES_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.ES_DOCKERHUB_PAT }}
 
       - name: artifacts - prepare directories
         run: mkdir -p .artifacts/helm
@@ -42,30 +45,27 @@ jobs:
           name: helm
           path: .artifacts/helm
 
-      # - name: "docker - build and publish"
-      #   run: |
-      #     docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-      #     # docker buildx rm builder
-      #     docker buildx create --name builder --driver docker-container --use
-      #     docker buildx inspect --bootstrap
-      #     docker buildx build --push --platform linux/amd64 -t ${{env.imageRepository}}:build-${{env.version}}-amd64   -f src/docker/Dockerfile src/docker 
-      #     docker buildx build --push --platform linux/arm   -t ${{env.imageRepository}}:build-${{env.version}}-arm32v7 -f src/docker/Dockerfile src/docker
-      #     docker buildx build --push --platform linux/arm64 -t ${{env.imageRepository}}:build-${{env.version}}-arm64v8 -f src/docker/Dockerfile src/docker
-      #     docker pull ${{env.imageRepository}}:build-${{env.version}}-amd64
-      #     docker pull ${{env.imageRepository}}:build-${{env.version}}-arm32v7
-      #     docker pull ${{env.imageRepository}}:build-${{env.version}}-arm64v8
-      #     docker manifest create  ${{env.imageRepository}}:build-${{env.version}} ${{env.imageRepository}}:build-${{env.version}}-amd64  ${{env.imageRepository}}:build-${{env.version}}-arm32v7  ${{env.imageRepository}}:build-${{env.version}}-arm64v8
-      #     docker manifest inspect ${{env.imageRepository}}:build-${{env.version}}
-      #     docker manifest push    ${{env.imageRepository}}:build-${{env.version}}
+      - name: "docker - build and publish"
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          # docker buildx rm builder
+          docker buildx create --name builder --driver docker-container --use
+          docker buildx inspect --bootstrap
+          docker buildx build --push --platform linux/amd64 -t ${{env.imageRepository}}:build-${{env.version}}-amd64   -f src/docker/Dockerfile src/docker 
+          docker buildx build --push --platform linux/arm   -t ${{env.imageRepository}}:build-${{env.version}}-arm32v7 -f src/docker/Dockerfile src/docker
+          docker buildx build --push --platform linux/arm64 -t ${{env.imageRepository}}:build-${{env.version}}-arm64v8 -f src/docker/Dockerfile src/docker
+          docker pull ${{env.imageRepository}}:build-${{env.version}}-amd64
+          docker pull ${{env.imageRepository}}:build-${{env.version}}-arm32v7
+          docker pull ${{env.imageRepository}}:build-${{env.version}}-arm64v8
+          docker manifest create  ${{env.imageRepository}}:build-${{env.version}} ${{env.imageRepository}}:build-${{env.version}}-amd64  ${{env.imageRepository}}:build-${{env.version}}-arm32v7  ${{env.imageRepository}}:build-${{env.version}}-arm64v8
+          docker manifest inspect ${{env.imageRepository}}:build-${{env.version}}
+          docker manifest push    ${{env.imageRepository}}:build-${{env.version}}
 
   cd:
     name: CD
     needs: ci
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    env:
-      version: 2.2.${{github.run_number}}
-      imageRepository: "emberstack/azure-pipelines-agent"
-      DOCKER_CLI_EXPERIMENTAL: "enabled"
     steps:
       - name: tools - helm - install
         uses: azure/setup-helm@v1
@@ -73,30 +73,49 @@ jobs:
       - name: tools - docker - login
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PAT }}
+          username: ${{ secrets.ES_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.ES_DOCKERHUB_PAT }}
 
-      - name: "artifacts - download - helm chart"
+      - name: artifacts - download - helm chart
         uses: actions/download-artifact@v2
         with:
           name: helm
           path: .artifacts/helm
 
-      - name: checkout
+      - name: "docker - tag and push"
+        run: |
+          docker pull ${{env.imageRepository}}:build-${{env.version}}-amd64
+          docker pull ${{env.imageRepository}}:build-${{env.version}}-arm32v7
+          docker pull ${{env.imageRepository}}:build-${{env.version}}-arm64v8
+          docker manifest create  ${{env.imageRepository}}:${{env.version}} ${{env.imageRepository}}:build-${{env.version}}-amd64 ${{env.imageRepository}}:build-${{env.version}}-arm32v7 ${{env.imageRepository}}:build-${{env.version}}-arm64v8
+          docker manifest create  ${{env.imageRepository}}:latest           ${{env.imageRepository}}:build-${{env.version}}-amd64 ${{env.imageRepository}}:build-${{env.version}}-arm32v7 ${{env.imageRepository}}:build-${{env.version}}-arm64v8
+          docker manifest push    ${{env.imageRepository}}:${{env.version}}
+          docker manifest push    ${{env.imageRepository}}:latest
+          docker manifest push    ${{env.imageRepository}}:${{env.version}}
+          docker manifest push    ${{env.imageRepository}}:latest
+          docker tag  ${{env.imageRepository}}:build-${{env.version}}-amd64     ${{env.imageRepository}}:${{env.version}}-amd64
+          docker tag  ${{env.imageRepository}}:build-${{env.version}}-arm32v7   ${{env.imageRepository}}:${{env.version}}-arm32v7
+          docker tag  ${{env.imageRepository}}:build-${{env.version}}-arm64v8   ${{env.imageRepository}}:${{env.version}}-arm64v8
+          docker push ${{env.imageRepository}}:${{env.version}}-amd64
+          docker push ${{env.imageRepository}}:${{env.version}}-arm32v7
+          docker push ${{env.imageRepository}}:${{env.version}}-arm64v8
+
+
+      - name: github - checkout - helm-charts
         uses: actions/checkout@v2
         with:
-          repository: emberstack/test
+          repository: emberstack/helm-charts
           token:  ${{ secrets.ES_GITHUB_PAT }}
           path: helm-charts
 
 
-      - name: Update changes in GitHub repository
+      - name: github - publish - chart
         run: |
           mkdir -p helm-charts/charts
           cp .artifacts/helm/azure-pipelines-agent-${{env.version}}.tgz  helm-charts/charts
 
           cd helm-charts
-          # rm index.yaml -f
+          rm -f index.yaml
           helm repo index ./
 
           git config user.name "Romeo Dumitrescu"
@@ -106,7 +125,7 @@ jobs:
           git commit -m "Added azure-pipelines-agent-${{env.version}}.tgz"
           git push
 
-      - name: Release
+      - name: github - create release
         uses: softprops/action-gh-release@v1
         with:
           repository: emberstack/docker-azure-pipelines-agent
