@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: Pipeline
 
 on:
   push:
@@ -81,3 +81,22 @@ jobs:
         with:
           name: helm
           path: .artifacts/helm
+
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          repository: emberstack/helm-charts
+
+
+      - name: Update changes in GitHub repository
+        run: |
+          mkdir -p helm-charts/charts
+          cp .artifacts/helm/azure-pipelines-agent-$(Build.BuildNumber).tgz  helm-charts/charts
+
+          cd helm-charts
+          rm index.yaml
+          helm repo index ./
+          git add .
+          git status
+          git commit -m "Added azure-pipelines-agent-$(Build.BuildNumber).tgz"
+          # git push
