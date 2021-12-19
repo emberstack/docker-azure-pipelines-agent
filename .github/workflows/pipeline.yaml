@@ -85,7 +85,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
         with:
-          repository: emberstack/helm-charts
+          repository: emberstack/test
           path: helm-charts
 
 
@@ -103,4 +103,4 @@ jobs:
           git add .
           git status
           git commit -m "Added azure-pipelines-agent-${{env.version}}.tgz"
-          # git push
+          git push
