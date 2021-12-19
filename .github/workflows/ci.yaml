@@ -5,6 +5,8 @@ on: [push]
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      version: 2.1.${{github.run_number}}
     steps:
       - name: Install Helm
         uses: azure/setup-helm@v1
