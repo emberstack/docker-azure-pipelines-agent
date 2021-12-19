@@ -59,4 +59,3 @@ You can customize the values of the helm deployment by using the following Value
 | `affinity`                           | Node affinity for pod assignment                            | `{}`                                                    |
 
 > Find us on [Artifact Hub](https://artifacthub.io/packages/helm/emberstack/azure-pipelines-agent)
-
