@@ -110,7 +110,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           repository: emberstack/docker-azure-pipelines-agent
-          body_path: ${{ github.workspace }}-CHANGELOG.txt
           tag_name: v${{env.version}}
           body: The release process is automated.
           token: ${{ secrets.ES_GITHUB_PAT }}
