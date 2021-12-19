@@ -91,12 +91,12 @@ jobs:
       - name: Update changes in GitHub repository
         run: |
           mkdir -p helm-charts/charts
-          cp .artifacts/helm/azure-pipelines-agent-$(Build.BuildNumber).tgz  helm-charts/charts
+          cp .artifacts/helm/azure-pipelines-agent-${{env.version}}.tgz  helm-charts/charts
 
           cd helm-charts
           rm index.yaml
           helm repo index ./
           git add .
           git status
-          git commit -m "Added azure-pipelines-agent-$(Build.BuildNumber).tgz"
+          git commit -m "Added azure-pipelines-agent-${{env.version}}.tgz"
           # git push
